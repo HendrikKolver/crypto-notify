@@ -1,5 +1,6 @@
 package co.za.crypto.ping;
 
+import co.za.crypto.ping.Services.SettingsEntity;
 import org.json.JSONObject;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -22,16 +23,15 @@ public class NotificationHandler{
     private double previousBitcoinPrice = 0;
     private double previousLitecoinPrice = 0;
     private double previousEthereumPrice = 0;
-    private final double PERCENTAGE_DIFFERENCE = 1;
-    private final String API_TOKEN = "";
-    private final String USER_TOKEN = "";
+    private final String API_TOKEN = "a18f7wk2pi86h69d6g38jxx7eiihxa";
+    private final String USER_TOKEN = "ubg8dy2wmkmt2912s3ti3mgifs6xof";
 
     public void run() {
         try {
-            sendPost("Startup", new SimpleDateFormat().format(new Date()));
+//            sendPost("Startup", new SimpleDateFormat().format(new Date()));
 
             while (true) {
-                System.out.println("Getting prices");
+//                System.out.println("Getting prices");
                 String bitcoinResponse = sendGet(3);
                 String litecoinResponse = sendGet(6);
                 String ethereumResponse = sendGet(11);
@@ -39,28 +39,33 @@ public class NotificationHandler{
                 double bitcoinPrice = getPriceFromResponse(bitcoinResponse);
                 double litecoinPrice = getPriceFromResponse(litecoinResponse);
                 double ethereumPrice = getPriceFromResponse(ethereumResponse);
+//
+//                System.out.println("Previous price: "+previousBitcoinPrice
+//                +" currentPrice: "+ bitcoinPrice
+//                +" difference: "+ getDifference(previousBitcoinPrice, bitcoinPrice));
 
+                SettingsEntity settings = ValueHolder.getInstance().getSettingsEntity();
                 if (previousBitcoinPrice == 0) {
                     previousBitcoinPrice = bitcoinPrice;
-                } else if (getDifference(previousBitcoinPrice, bitcoinPrice) > PERCENTAGE_DIFFERENCE || getDifference(previousBitcoinPrice, bitcoinPrice) < -PERCENTAGE_DIFFERENCE) {
+                } else if (getDifference(previousBitcoinPrice, bitcoinPrice) > settings.getDifference() || getDifference(previousBitcoinPrice, bitcoinPrice) < -settings.getDifference()) {
                     sendPost("Bitcoin price change " + getDifference(previousBitcoinPrice, bitcoinPrice), "New Bitcoin Price: " + bitcoinPrice);
                     previousBitcoinPrice = bitcoinPrice;
                 }
 
                 if (previousLitecoinPrice == 0) {
                     previousLitecoinPrice = litecoinPrice;
-                } else if (getDifference(previousLitecoinPrice, litecoinPrice) > PERCENTAGE_DIFFERENCE || getDifference(previousLitecoinPrice, litecoinPrice) < -PERCENTAGE_DIFFERENCE) {
+                } else if (getDifference(previousLitecoinPrice, litecoinPrice) > settings.getDifference() || getDifference(previousLitecoinPrice, litecoinPrice) < -settings.getDifference()) {
                     sendPost("Litecoin price change " + getDifference(previousLitecoinPrice, litecoinPrice), "New Litecoin Price: " + litecoinPrice);
                     previousLitecoinPrice = litecoinPrice;
                 }
 
                 if (previousEthereumPrice == 0) {
                     previousEthereumPrice = ethereumPrice;
-                } else if (getDifference(previousEthereumPrice, ethereumPrice) > PERCENTAGE_DIFFERENCE || getDifference(previousEthereumPrice, ethereumPrice) < -PERCENTAGE_DIFFERENCE) {
+                } else if (getDifference(previousEthereumPrice, ethereumPrice) > settings.getDifference() || getDifference(previousEthereumPrice, ethereumPrice) < -settings.getDifference()) {
                     sendPost("Ethereum price change " + getDifference(previousEthereumPrice, ethereumPrice), "New Ethereum Price: " + ethereumPrice);
                     previousEthereumPrice = ethereumPrice;
                 }
-                Thread.sleep(600000);
+                Thread.sleep(settings.getRefreshTime());
             }
 
         } catch (Exception e) {
