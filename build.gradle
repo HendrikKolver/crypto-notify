@@ -17,7 +17,7 @@ apply plugin: 'org.springframework.boot'
 
 jar {
     baseName = 'cryptowatch'
-    version =  '1.0.0'
+    version =  '1.0.7'
 }
 
 repositories {

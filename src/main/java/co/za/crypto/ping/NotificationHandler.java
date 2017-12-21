@@ -19,19 +19,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Component
-public class NotificationHandler{
+public class NotificationHandler {
     private double previousBitcoinPrice = 0;
     private double previousLitecoinPrice = 0;
     private double previousEthereumPrice = 0;
-    private final String API_TOKEN = "a18f7wk2pi86h69d6g38jxx7eiihxa";
-    private final String USER_TOKEN = "ubg8dy2wmkmt2912s3ti3mgifs6xof";
+    private final String API_TOKEN = "";
+    private final String USER_TOKEN = "";
+    private boolean watchdog;
 
     public void run() {
-        try {
-//            sendPost("Startup", new SimpleDateFormat().format(new Date()));
+        SettingsEntity settings = ValueHolder.getInstance().getSettingsEntity();
 
-            while (true) {
-//                System.out.println("Getting prices");
+        while (true) {
+            try {
                 String bitcoinResponse = sendGet(3);
                 String litecoinResponse = sendGet(6);
                 String ethereumResponse = sendGet(11);
@@ -39,12 +39,20 @@ public class NotificationHandler{
                 double bitcoinPrice = getPriceFromResponse(bitcoinResponse);
                 double litecoinPrice = getPriceFromResponse(litecoinResponse);
                 double ethereumPrice = getPriceFromResponse(ethereumResponse);
-//
-//                System.out.println("Previous price: "+previousBitcoinPrice
-//                +" currentPrice: "+ bitcoinPrice
-//                +" difference: "+ getDifference(previousBitcoinPrice, bitcoinPrice));
 
-                SettingsEntity settings = ValueHolder.getInstance().getSettingsEntity();
+                System.out.println("BTC Previous price: " + previousBitcoinPrice
+                        + " currentPrice: " + bitcoinPrice
+                        + " difference: " + getDifference(previousBitcoinPrice, bitcoinPrice));
+
+                System.out.println("LTC Previous price: " + previousLitecoinPrice
+                        + " currentPrice: " + litecoinPrice
+                        + " difference: " + getDifference(previousLitecoinPrice, litecoinPrice));
+
+                System.out.println("ETH Previous price: " + previousEthereumPrice
+                        + " currentPrice: " + ethereumPrice
+                        + " difference: " + getDifference(previousEthereumPrice, ethereumPrice));
+
+
                 if (previousBitcoinPrice == 0) {
                     previousBitcoinPrice = bitcoinPrice;
                 } else if (getDifference(previousBitcoinPrice, bitcoinPrice) > settings.getDifference() || getDifference(previousBitcoinPrice, bitcoinPrice) < -settings.getDifference()) {
@@ -66,10 +74,35 @@ public class NotificationHandler{
                     previousEthereumPrice = ethereumPrice;
                 }
                 Thread.sleep(settings.getRefreshTime());
+            } catch (Exception e) {
+                e.printStackTrace();
+                watchdog = true;
+                try {
+                    sendPost("The service broke", e.getMessage());
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+                startWatchDog(settings.getRefreshTime());
             }
+        }
+    }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+    private void startWatchDog(long time) {
+        if (watchdog) {
+            watchdog = false;
+
+            while (true) {
+
+                System.out.println("Watchdog activated");
+                try {
+                    Thread.sleep(time);
+                    run();
+                    return;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
         }
     }
 

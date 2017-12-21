@@ -11,7 +11,7 @@ public class ValueHolder {
     }
 
     private ValueHolder() {
-        settingsEntity = new SettingsEntity(1.0, 60000);
+        settingsEntity = new SettingsEntity(10.0, 3600000);
     }
 
     public SettingsEntity getSettingsEntity() {
